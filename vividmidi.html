@@ -1,8 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="refresh" content="0; url=/assets/img/ipad.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View MIDI File</title>
 </head>
 <body>
+    <h1>MIDI File Contents</h1>
+    <pre id="midicontent">Loading...</pre>
+
+    <script>
+        fetch('https://raw.githubusercontent.com/TheShadow45/website/main/assets/img/track.mid')
+            .then(response => response.text())  // Read as text (raw binary won't display properly)
+            .then(data => {
+                document.getElementById('midicontent').textContent = data;
+            })
+            .catch(error => {
+                document.getElementById('midicontent').textContent = "Failed to load MIDI file.";
+                console.error(error);
+            });
+    </script>
 </body>
 </html>
