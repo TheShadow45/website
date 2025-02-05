@@ -1,0 +1,46 @@
+function displayMidiPianoRollFromMime64(mime, targetid, options) {
+    console.log("OPTIONS", options);
+    let oelement = document.querySelector("#options");
+    if (oelement) {
+        let contents = JSON.stringify(options, null, 3);
+        oelement.innerHTML = `<h2>Options</h2><pre>${contents}</pre>`;
+    }
+
+    let formdata = new FormData();
+    formdata.set("outputformat", "pianoroll");
+    formdata.append("inputdata", mime);
+    for (let property in options) {
+        formdata.set(property, options[property]);
+    }
+
+    let request = new XMLHttpRequest();
+    request.open("POST", "https://data.svg.humdrum.org");
+    request.onload = function () {
+        let target = document.querySelector("#" + targetid);
+        if (!target) {
+            console.warn("Error: no target for ", targetid);
+            return;
+        }
+        
+        // Insert SVG into the target div
+        target.innerHTML = this.responseText;
+
+        // Extract the SVG content
+        let svgElement = target.querySelector("svg");
+        if (svgElement) {
+            let svgData = new XMLSerializer().serializeToString(svgElement);
+            let blob = new Blob([svgData], { type: "image/svg+xml" });
+            let url = URL.createObjectURL(blob);
+
+            // Create a download button
+            let downloadBtn = document.createElement("a");
+            downloadBtn.href = url;
+            downloadBtn.download = "piano_roll.svg";
+            downloadBtn.textContent = "Download SVG";
+            downloadBtn.style.display = "block";
+            downloadBtn.style.marginTop = "10px";
+            target.appendChild(downloadBtn);
+        }
+    };
+    request.send(formdata);
+}
