@@ -1,46 +1,88 @@
-function displayMidiPianoRollFromMime64(mime, targetid, options) {
-    console.log("OPTIONS", options);
-    let oelement = document.querySelector("#options");
-    if (oelement) {
-        let contents = JSON.stringify(options, null, 3);
-        oelement.innerHTML = `<h2>Options</h2><pre>${contents}</pre>`;
-    }
-
-    let formdata = new FormData();
-    formdata.set("outputformat", "pianoroll");
-    formdata.append("inputdata", mime);
-    for (let property in options) {
-        formdata.set(property, options[property]);
-    }
-
-    let request = new XMLHttpRequest();
-    request.open("POST", "https://data.svg.humdrum.org");
-    request.onload = function () {
-        let target = document.querySelector("#" + targetid);
-        if (!target) {
-            console.warn("Error: no target for ", targetid);
-            return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>MIDI-to-SVG Converter</title>
+    <style>
+        body.waiting {
+            cursor: wait;
         }
-        
-        // Insert SVG into the target div
-        target.innerHTML = this.responseText;
+    </style>
+</head>
+<body>
+    <h1>MIDI-to-SVG Converter</h1>
+    <nobr>MIDI file URL: <input type="text" onkeyup="updateSvg()" id="url" value="/midi/twinkle.mid" style="width:500px;" /></nobr>
+    <p><br />Try a URL to any Standard MIDI File.<br /><br /></p>
 
-        // Extract the SVG content
-        let svgElement = target.querySelector("svg");
-        if (svgElement) {
-            let svgData = new XMLSerializer().serializeToString(svgElement);
-            let blob = new Blob([svgData], { type: "image/svg+xml" });
-            let url = URL.createObjectURL(blob);
+    <div id="display-area" style="width:100%; overflow-x: auto; padding-top:50px"></div>
+    <div id="options"></div>
 
-            // Create a download button
-            let downloadBtn = document.createElement("a");
-            downloadBtn.href = url;
-            downloadBtn.download = "piano_roll.svg";
-            downloadBtn.textContent = "Download SVG";
-            downloadBtn.style.display = "block";
-            downloadBtn.style.marginTop = "10px";
-            target.appendChild(downloadBtn);
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let options = { scale: 5, aspectRatio: 15 };
+            displayMidiPianoRollFromUrl("/midi/twinkle.mid", "display-area", options);
+        });
+
+        function updateSvg() {
+            let urlElement = document.querySelector("#url");
+            let url = urlElement ? urlElement.value : "/midi/twinkle.mid";
+            let options = { scale: 5, aspectRatio: 15 };
+            displayMidiPianoRollFromUrl(url, "display-area", options);
         }
-    };
-    request.send(formdata);
-}
+
+        function displayMidiPianoRollFromUrl(midiurl, targetid, options) {
+            getMidiDataFromUrlAndThenConvertToSvg(midiurl, targetid, options);
+        }
+
+        function getMidiDataFromUrlAndThenConvertToSvg(url, targetid, options) {
+            if (!url) return;
+            let request = new XMLHttpRequest();
+            request.open("GET", url);
+            request.responseType = "blob";
+            request.onload = function () {
+                displayMidiPianoRollFromBlob(this.response, targetid, options);
+            };
+            request.send();
+        }
+
+        function displayMidiPianoRollFromBlob(blob, targetid, options) {
+            let reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = function () {
+                displayMidiPianoRollFromMime64(reader.result.replace(/.*,/, ""), targetid, options);
+            };
+        }
+
+        function displayMidiPianoRollFromMime64(mime, targetid, options) {
+            let formdata = new FormData();
+            formdata.set("outputformat", "pianoroll");
+            formdata.append("inputdata", mime);
+
+            let request = new XMLHttpRequest();
+            request.open("POST", "https://data.svg.humdrum.org");
+            request.onload = function () {
+                let target = document.querySelector("#" + targetid);
+                if (!target) return;
+                target.innerHTML = this.responseText;
+                
+                let svgElement = target.querySelector("svg");
+                if (svgElement) {
+                    let svgData = new XMLSerializer().serializeToString(svgElement);
+                    let blob = new Blob([svgData], { type: "image/svg+xml" });
+                    let url = URL.createObjectURL(blob);
+
+                    let downloadBtn = document.createElement("a");
+                    downloadBtn.href = url;
+                    downloadBtn.download = "piano_roll.svg";
+                    downloadBtn.textContent = "Download SVG";
+                    downloadBtn.style.display = "block";
+                    downloadBtn.style.marginTop = "10px";
+                    target.appendChild(downloadBtn);
+                }
+            };
+            request.send(formdata);
+        }
+    </script>
+</body>
+</html>
