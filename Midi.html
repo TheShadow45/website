@@ -27,6 +27,7 @@
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" href="https://aerolyx.net/index.html">Home</a></li>
+
                     </ul>
                 </div>
             </div>
@@ -68,7 +69,14 @@
                 let request = new XMLHttpRequest();
                 request.open("POST", "https://data.svg.humdrum.org");
                 request.onload = function () {
-                    document.getElementById("display-area").innerHTML = this.responseText;
+                    let displayArea = document.getElementById("display-area");
+                    displayArea.innerHTML = this.responseText;
+                    let downloadLink = document.getElementById("downloadLink");
+                    let blob = new Blob([this.responseText], { type: "image/svg+xml" });
+                    let url = URL.createObjectURL(blob);
+                    downloadLink.href = url;
+                    downloadLink.style.display = "inline-block";
+                    downloadLink.innerText = "Download SVG";
                 };
                 request.send(formdata);
             }
