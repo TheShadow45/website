@@ -27,7 +27,6 @@
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" href="https://aerolyx.net/index.html">Home</a></li>
-
                     </ul>
                 </div>
             </div>
@@ -39,10 +38,12 @@
                     <div class="text-center">
                         <h1 class="mx-auto my-0 text-uppercase">MIDI to SVG Converter</h1>
                         <h2 class="text-white-50 mx-auto mt-2 mb-5">Upload a MIDI file to generate a piano roll SVG visualization.</h2>
-                        <input type="file" id="midiUpload" class="form-control" />
-                        <button class="btn btn-primary mt-2" onclick="handleFileUpload()">Convert</button>
+                        <div class="mb-3">
+                            <input type="file" id="midiUpload" class="form-control form-control-lg" />
+                        </div>
+                        <button class="btn btn-primary btn-lg" onclick="handleFileUpload()">Convert</button>
                         <div id="display-area" class="mt-4"></div>
-                        <a id="downloadLink" class="btn btn-success mt-2" style="display: none;" download>Download SVG</a>
+                        <a id="downloadLink" class="btn btn-success btn-lg mt-2" style="display: none;" download>Download SVG</a>
                     </div>
                 </div>
             </div>
