@@ -1,88 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>MIDI-to-SVG Converter</title>
-    <style>
-        body.waiting {
-            cursor: wait;
-        }
-    </style>
-</head>
-<body>
-    <h1>MIDI-to-SVG Converter</h1>
-    <nobr>MIDI file URL: <input type="text" onkeyup="updateSvg()" id="url" value="/midi/twinkle.mid" style="width:500px;" /></nobr>
-    <p><br />Try a URL to any Standard MIDI File.<br /><br /></p>
-
-    <div id="display-area" style="width:100%; overflow-x: auto; padding-top:50px"></div>
-    <div id="options"></div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            let options = { scale: 5, aspectRatio: 15 };
-            displayMidiPianoRollFromUrl("/midi/twinkle.mid", "display-area", options);
-        });
-
-        function updateSvg() {
-            let urlElement = document.querySelector("#url");
-            let url = urlElement ? urlElement.value : "/midi/twinkle.mid";
-            let options = { scale: 5, aspectRatio: 15 };
-            displayMidiPianoRollFromUrl(url, "display-area", options);
-        }
-
-        function displayMidiPianoRollFromUrl(midiurl, targetid, options) {
-            getMidiDataFromUrlAndThenConvertToSvg(midiurl, targetid, options);
-        }
-
-        function getMidiDataFromUrlAndThenConvertToSvg(url, targetid, options) {
-            if (!url) return;
-            let request = new XMLHttpRequest();
-            request.open("GET", url);
-            request.responseType = "blob";
-            request.onload = function () {
-                displayMidiPianoRollFromBlob(this.response, targetid, options);
-            };
-            request.send();
-        }
-
-        function displayMidiPianoRollFromBlob(blob, targetid, options) {
-            let reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = function () {
-                displayMidiPianoRollFromMime64(reader.result.replace(/.*,/, ""), targetid, options);
-            };
-        }
-
-        function displayMidiPianoRollFromMime64(mime, targetid, options) {
-            let formdata = new FormData();
-            formdata.set("outputformat", "pianoroll");
-            formdata.append("inputdata", mime);
-
-            let request = new XMLHttpRequest();
-            request.open("POST", "https://data.svg.humdrum.org");
-            request.onload = function () {
-                let target = document.querySelector("#" + targetid);
-                if (!target) return;
-                target.innerHTML = this.responseText;
-                
-                let svgElement = target.querySelector("svg");
-                if (svgElement) {
-                    let svgData = new XMLSerializer().serializeToString(svgElement);
-                    let blob = new Blob([svgData], { type: "image/svg+xml" });
-                    let url = URL.createObjectURL(blob);
-
-                    let downloadBtn = document.createElement("a");
-                    downloadBtn.href = url;
-                    downloadBtn.download = "piano_roll.svg";
-                    downloadBtn.textContent = "Download SVG";
-                    downloadBtn.style.display = "block";
-                    downloadBtn.style.marginTop = "10px";
-                    target.appendChild(downloadBtn);
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Aerolyx</title>
+        <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+        <!-- Font Awesome icons (free version)-->
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+        <!-- Google fonts-->
+        <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet" />
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="css/styles.css" rel="stylesheet" />
+    </head>
+    <body id="page-top">
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+            <div class="container px-4 px-lg-5">
+                <a class="navbar-brand" href="#page-top">Aerolyx</a>
+                <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                    Menu
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="https://aerolyx.net/midi.html">Midi</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#signup">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- Masthead-->
+        <header class="masthead">
+            <div class="container px-4 px-lg-5 d-flex h-100 align-items-center justify-content-center">
+                <div class="d-flex justify-content-center">
+                    <div class="text-center">
+                        <h1 class="mx-auto my-0 text-uppercase">MIDI to SVG Converter</h1>
+                        <h2 class="text-white-50 mx-auto mt-2 mb-5">Upload a MIDI file to generate a piano roll SVG visualization.</h2>
+                        <input type="file" id="midiUpload" class="btn btn-primary" />
+                        <button class="btn btn-primary" onclick="handleFileUpload()">Convert</button>
+                        <div id="display-area" class="mt-4"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <script>
+            function handleFileUpload() {
+                let fileInput = document.getElementById("midiUpload");
+                if (!fileInput.files.length) {
+                    alert("Please select a file.");
+                    return;
                 }
-            };
-            request.send(formdata);
-        }
-    </script>
-</body>
+                let file = fileInput.files[0];
+                let reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onloadend = function () {
+                    let mime = reader.result.replace(/.*,/, "");
+                    convertToSvg(mime);
+                };
+            }
+            function convertToSvg(mime) {
+                let formdata = new FormData();
+                formdata.set("outputformat", "pianoroll");
+                formdata.append("inputdata", mime);
+                let request = new XMLHttpRequest();
+                request.open("POST", "https://data.svg.humdrum.org");
+                request.onload = function () {
+                    document.getElementById("display-area").innerHTML = this.responseText;
+                };
+                request.send(formdata);
+            }
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="js/scripts.js"></script>
+    </body>
 </html>
